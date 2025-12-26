@@ -1,7 +1,7 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use actix_web::{App, HttpResponse, HttpServer, web};
 
-async fn health_check() -> impl Responder {
-    HttpResponse::Ok()
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -13,4 +13,16 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::health_check;
+
+    #[tokio::test]
+    async fn health_check_succeeds() {
+        let response = health_check().await;
+        assert!(response.status().is_success());
+    }
 }
