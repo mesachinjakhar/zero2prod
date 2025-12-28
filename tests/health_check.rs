@@ -2,6 +2,9 @@
 async fn health_check_works() {
     spawn_app().await; // we need to await it because we need to wait untill the server is created and handover to tokio
 
+    // we need to wait untill the spawn_app do it works, eg creating server and running it on tokio
+    // after that only we should execute our next line code eg: line 9
+
     // generate http client to send request
     let client = reqwest::Client::new();
 
