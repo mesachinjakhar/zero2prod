@@ -1,6 +1,6 @@
 #[tokio::test]
 async fn health_check_works() {
-    spawn_app();
+    spawn_app().await; // we need to await it because we need to wait untill the server is created and handover to tokio
 
     // generate http client to send request
     let client = reqwest::Client::new();
