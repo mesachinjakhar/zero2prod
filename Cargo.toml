@@ -18,6 +18,7 @@ config = "0.11"
 chrono = "0.4.42"
 uuid = { version = "1", features = ["v4"] }
 env_logger = "0.11.8"
+log = "0.4.29"
 
 
 [dependencies.sqlx]
