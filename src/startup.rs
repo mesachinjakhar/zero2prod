@@ -14,7 +14,6 @@ pub fn run(
 
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscibe))
             // Register the connection as part of the application state
