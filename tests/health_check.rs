@@ -7,6 +7,8 @@ use zero2prod::{
     telemetry::{get_subsciber, init_subscriber},
 };
 
+use secrecy::ExposeSecret;
+
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
     let subscribe_name = "test".to_string();
@@ -50,7 +52,7 @@ async fn spawn_app() -> TestApp {
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create Database
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+    let mut connection = PgConnection::connect(&config.connection_string_without_db().expose_secret())
         .await
         .expect("Failed to connect to Postgres");
     connection
@@ -59,7 +61,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to create database.");
 
     // Migrate database
-    let connection_pool = PgPool::connect(&config.connection_string())
+    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
         .await
         .expect("failed to connect to Postgres.");
 
