@@ -4,6 +4,7 @@ use std::net::TcpListener;
 pub mod configuration;
 pub mod routes;
 pub mod startup;
+pub mod telemetry;
 
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().body("Pong")
