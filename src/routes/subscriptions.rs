@@ -11,7 +11,9 @@ pub struct FormData {
 }
 
 pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
-    log::info!("Saving new subscriber details in database");
+    let request_id = Uuid::new_v4();
+    log::info!("request_id {} - Adding '{}' '{}' as a new subscriber", request_id, form.email, form.name);
+    log::info!("request_id {} - Saving new subsciber details in the database", request_id);
     match sqlx::query!(
         r#"INSERT INTO subscriptions (id, email, name, subscribed_at) 
     VALUES ($1, $2, $3, $4)
@@ -25,11 +27,11 @@ pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Htt
     .await
     {
         Ok(_) => {
-            log::info!("New subsciber details have been saved");
+            log::info!("request id {} - New subsciber details have been saved", request_id);
             HttpResponse::Ok().finish()
         },
         Err(e) => {
-            log::error!("Failed to execute query: {:?}", e);
+            log::error!("request id {} - Failed to execute query: {:?}", request_id, e);
             HttpResponse::InternalServerError().finish()
         },
     }
