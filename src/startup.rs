@@ -4,6 +4,9 @@ use actix_web::{App, HttpServer, web};
 use sqlx::PgPool;
 use std::net::TcpListener;
 
+use actix_web::middleware::Logger;
+use actix_web::web::Data;
+
 pub fn run(
     listener: TcpListener,
     // New parameter!
@@ -13,6 +16,7 @@ pub fn run(
 
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscibe))
             // Register the connection as part of the application state
