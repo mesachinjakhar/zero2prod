@@ -4,8 +4,6 @@ use actix_web::{App, HttpServer, web};
 use sqlx::PgPool;
 use std::net::TcpListener;
 
-use actix_web::middleware::Logger;
-use actix_web::web::Data;
 use tracing_actix_web::TracingLogger;
 
 pub fn run(
