@@ -6,6 +6,7 @@ use std::net::TcpListener;
 
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
+use tracing_actix_web::TracingLogger;
 
 pub fn run(
     listener: TcpListener,
@@ -16,7 +17,7 @@ pub fn run(
 
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(Logger::default())
+            .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscibe))
             // Register the connection as part of the application state
