@@ -35,7 +35,7 @@ features = [
   "uuid",
   "chrono",
   "macros",
-  "migrate"
+  "migrate",
 ]
 
 [dev-dependencies]
