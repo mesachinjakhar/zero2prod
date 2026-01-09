@@ -60,8 +60,8 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
 impl DatabaseSettings {
     pub fn with_db(&self) -> PgConnectOptions {
-        self.with_db().database(&self.database_name)
-
+        self.without_db()
+            .database(&self.database_name)
     }
 
     pub fn without_db(&self) -> PgConnectOptions {
@@ -70,14 +70,16 @@ impl DatabaseSettings {
         } else {
             PgSslMode::Prefer
         };
+
         PgConnectOptions::new()
             .host(&self.host)
             .username(&self.username)
-            .password(&self.password.expose_secret())
+            .password(self.password.expose_secret())
             .port(self.port)
             .ssl_mode(ssl_mode)
     }
 }
+
 
 pub enum Environment {
     Local,
