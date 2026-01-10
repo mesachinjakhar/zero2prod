@@ -2,10 +2,10 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, dev::Server, web};
 use std::net::TcpListener;
 
 pub mod configuration;
+pub mod domain;
 pub mod routes;
 pub mod startup;
 pub mod telemetry;
-pub mod domain;
 
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().body("Pong")

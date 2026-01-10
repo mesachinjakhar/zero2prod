@@ -2,8 +2,8 @@ use actix_web::{HttpResponse, web};
 use chrono::Utc;
 use sqlx::PgPool;
 use tracing::Instrument;
-use uuid::Uuid;
 use unicode_segmentation::UnicodeSegmentation;
+use uuid::Uuid;
 
 use crate::domain::{NewSubsciber, SubscriberName};
 
@@ -15,9 +15,14 @@ pub struct FormData {
 #[tracing::instrument(name = "Adding a new subscriber", skip(form, pool), fields(subscribe_email = %form.email, subscriber_name = %form.name))]
 
 pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+    let name = match SubscriberName::parse(form.0.name) {
+        Ok(name) => name,
+        // Return early if the name is invalid, with a 400
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
     let new_subscriber = NewSubsciber {
         email: form.0.email,
-        name: SubscriberName::parse(form.0.name).expect("Name validation failed."),
+        name,
     };
     match insert_subscriber(&pool, &new_subscriber).await {
         Ok(_) => HttpResponse::Ok().finish(),
@@ -29,7 +34,10 @@ pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Htt
     name = "Saving new subscriber details in the database",
     skip(new_subsciber, pool)
 )]
-pub async fn insert_subscriber(pool: &PgPool, new_subsciber: &NewSubsciber) -> Result<(), sqlx::Error> {
+pub async fn insert_subscriber(
+    pool: &PgPool,
+    new_subsciber: &NewSubsciber,
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
 INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -49,13 +57,12 @@ VALUES ($1, $2, $3, $4)
     Ok(())
 }
 
-
 pub fn is_valid_name(s: &str) -> bool {
     let is_empty_or_whitespace = s.trim().is_empty();
 
     let is_too_long = s.graphemes(true).count() > 256;
 
-    let forbidden_characters = ['/', '(', ')', '"', '<' , '>', '\\', '{', '}'];
+    let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
     let contains_forbidden_characters = s.chars().any(|g| forbidden_characters.contains(&g));
 
     !(is_empty_or_whitespace || is_too_long || contains_forbidden_characters)
