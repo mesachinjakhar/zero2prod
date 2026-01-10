@@ -5,7 +5,8 @@ use tracing::Instrument;
 use unicode_segmentation::UnicodeSegmentation;
 use uuid::Uuid;
 
-use crate::domain::{NewSubsciber, SubscriberName};
+use crate::domain::NewSubscriber;
+use crate::domain::SubscriberName;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -20,7 +21,7 @@ pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Htt
         // Return early if the name is invalid, with a 400
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    let new_subscriber = NewSubsciber {
+    let new_subscriber = NewSubscriber {
         email: form.0.email,
         name,
     };
@@ -36,7 +37,7 @@ pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Htt
 )]
 pub async fn insert_subscriber(
     pool: &PgPool,
-    new_subsciber: &NewSubsciber,
+    new_subsciber: &NewSubscriber,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"

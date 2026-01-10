@@ -1,12 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
-#[derive(Debug)]
-pub struct SubscriberName(String);
 
 #[derive(Debug)]
-pub struct NewSubsciber {
-    pub email: String,
-    pub name: SubscriberName,
-}
+pub struct SubscriberName(String);
 
 impl SubscriberName {
     pub fn parse(s: String) -> Result<SubscriberName, String> {
@@ -42,6 +37,7 @@ impl AsRef<str> for SubscriberName {
         &self.0
     }
 }
+
 
 #[cfg(test)]
 mod tests {
