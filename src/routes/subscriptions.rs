@@ -3,6 +3,9 @@ use chrono::Utc;
 use sqlx::PgPool;
 use tracing::Instrument;
 use uuid::Uuid;
+use unicode_segmentation::UnicodeSegmentation;
+
+use crate::domain::{NewSubsciber, SubscriberName};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -12,7 +15,11 @@ pub struct FormData {
 #[tracing::instrument(name = "Adding a new subscriber", skip(form, pool), fields(subscribe_email = %form.email, subscriber_name = %form.name))]
 
 pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
-    match insert_subscriber(&pool, &form).await {
+    let new_subscriber = NewSubsciber {
+        email: form.0.email,
+        name: SubscriberName::parse(form.0.name).expect("Name validation failed."),
+    };
+    match insert_subscriber(&pool, &new_subscriber).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
@@ -20,17 +27,17 @@ pub async fn subscibe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Htt
 
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
-    skip(form, pool)
+    skip(new_subsciber, pool)
 )]
-pub async fn insert_subscriber(pool: &PgPool, form: &FormData) -> Result<(), sqlx::Error> {
+pub async fn insert_subscriber(pool: &PgPool, new_subsciber: &NewSubsciber) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
 INSERT INTO subscriptions (id, email, name, subscribed_at)
 VALUES ($1, $2, $3, $4)
 "#,
         Uuid::new_v4(),
-        form.email,
-        form.name,
+        new_subsciber.email,
+        new_subsciber.name.as_ref(),
         Utc::now()
     )
     .execute(pool)
@@ -40,4 +47,16 @@ VALUES ($1, $2, $3, $4)
         e
     })?;
     Ok(())
+}
+
+
+pub fn is_valid_name(s: &str) -> bool {
+    let is_empty_or_whitespace = s.trim().is_empty();
+
+    let is_too_long = s.graphemes(true).count() > 256;
+
+    let forbidden_characters = ['/', '(', ')', '"', '<' , '>', '\\', '{', '}'];
+    let contains_forbidden_characters = s.chars().any(|g| forbidden_characters.contains(&g));
+
+    !(is_empty_or_whitespace || is_too_long || contains_forbidden_characters)
 }

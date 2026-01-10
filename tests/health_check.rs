@@ -53,7 +53,7 @@ async fn spawn_app() -> TestApp {
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create Database
     let mut connection =
-        PgConnection::connect(&config.connection_string_without_db().expose_secret())
+        PgConnection::connect_with(&config.without_db())
             .await
             .expect("Failed to connect to Postgres");
     connection
@@ -99,10 +99,10 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
     let test_app = spawn_app().await;
     let configuration = get_configuration().expect("Failed to read configuration");
-    let connection_string = configuration.database.connection_string();
+    let connection_string = configuration.database.with_db();
     // The `Connection` trait MUST be in scope for us to invoke
     // `PgConnection::connect` - it is not an inherent method of the struct!
-    let mut connection = PgConnection::connect(&connection_string)
+    let mut connection = PgConnection::connect_with(&connection_string)
         .await
         .expect("Failed to connect to Postgres.");
     let client = reqwest::Client::new();
@@ -154,5 +154,24 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
             "The API did not fail with 400 Bad Request when the payload was {}.",
             error_message
         );
+    }
+}
+
+
+#[tokio::test]
+async fn subscibe_returns_a_200_when_fields_are_present_but_empty() {
+    let app = spawn_app().await;
+    let client = reqwest::Client::new();
+    let test_cases = vec![("name=&email=deepakjakhar%40gmail.com", "empty name"), ("name=deepak&email=", "empty email"), ("name=Ursula&email=definitely-not-an-email", "invalid email")];
+
+    for (body, description) in test_cases {
+        let response = client.post(&format!("{}/subscriptions", &app.address))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(body)
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+        assert_eq!(400, response.status().as_u16(), "the api didnt response 200 when the payload was: {}", description);
     }
 }
