@@ -178,7 +178,7 @@ async fn subscibe_returns_a_200_when_fields_are_present_but_empty() {
         assert_eq!(
             400,
             response.status().as_u16(),
-            "the api didnt response 200 when the payload was: {}",
+            "the api didnt response 400 when the payload was: {}",
             description
         );
     }
