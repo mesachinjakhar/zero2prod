@@ -1,15 +1,12 @@
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::net::TcpListener;
 use uuid::Uuid;
 use zero2prod::configuration::{DatabaseSettings, get_configuration};
 
-use zero2prod::email_client::EmailClient;
-use zero2prod::startup::run;
 use zero2prod::telemetry::{get_subsciber, init_subscriber};
 
 use zero2prod::startup::build;
-use zero2prod::startup::{build, get_connection_pool};
+use zero2prod::startup::{get_connection_pool};
 
 use zero2prod::startup::Application;
 
@@ -45,13 +42,9 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to build application");
 
     configure_database(&configuration.database).await;
-
-    let server = build(configuration.clone())
-        .await
-        .expect("Failed to build application");
     let address = format!("http://127.0.0.1:{}", application.port());
 
-    let _ = tokio::spawn(server);
+    let _ = tokio::spawn(application.run_untill_stopped());
 
     TestApp {
         address,
